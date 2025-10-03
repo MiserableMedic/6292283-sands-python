@@ -9,7 +9,8 @@ def create_sine_wave(frequency, duration, sample_rate):
 
 def create_cosine_wave(frequency, duration, sample_rate):
 
-    t = np.linspace(0, duration, sample_rate * duration)
-    cosine_wave = np.cos(2 * np.pi * frequency * t)
+    t, sine_wave = create_sine_wave(frequency,duration,sample_rate)
+
+    cosine_wave = sine_wave - (np.pi/2)
 
     return t, cosine_wave
