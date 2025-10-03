@@ -7,14 +7,28 @@ class Signal:
         self.samples = samples
         self.sample_rate = sample_rate
 
+    def check_comp(self, other):
+        if not np.array_equal(self.t, other.t):
+            raise ValueError("Signals must have the same time array")
+        if self.sample_rate != other.sample_rate:
+            raise ValueError("Signals must have the same sample rate")
+
     def add(self, other):
+        self.check_comp(other)
         return Signal(self.t, self.samples + other.samples, self.sample_rate)
 
     def multiply(self, other):
+        self.check_comp(other)
         return Signal(self.t, self.samples * other.samples, self.sample_rate)
 
     def shift(self, displace: float):
         return Signal(self.t + displace, self.samples, self.sample_rate)
+
+    def scale(self, factor: float):
+        return Signal(self.t * factor, self.samples, self.sample_rate)
+    
+    def amplify(self, factor: float):
+        return Signal(self.t, self.samples * factor, self.sample_rate)
 
     def plot(self):
         plt.plot(self.t, self.samples)
@@ -22,6 +36,7 @@ class Signal:
         plt.ylabel('Amplitude')
         plt.grid()
         plt.show()
+
 
 class GenSignal:
     def __init__(self, sample_rate: float = 1000.0):
