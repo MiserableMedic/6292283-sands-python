@@ -16,9 +16,16 @@ def create_cosine_wave(frequency, duration, sample_rate, phase=0, amp=1):
     return t, cosine_wave
 
 
-def create_sinc_wave(duration, sample_rate):
+def create_sinc_wave(duration, sample_rate, phase=0,amp=1):
 
-    t= np.linspace((-1)*duration/2, duration/2, int(sample_rate*duration))
-    sinc_wave = np.sinc(t)
+    t = np.linspace((-1)*duration, duration, sample_rate*duration)
+    sinc_wave = amp*np.sinc(t+phase)
 
     return t, sinc_wave
+
+
+def create_unit_step(strt_duration, end_duration, displace=0, amp=1):
+    t = np.linspace(strt_duration, end_duration, 2000)
+    unit_step = np.where(t < 0-displace, 0, amp)
+
+    return  t, unit_step
