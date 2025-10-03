@@ -30,10 +30,10 @@ It is possible to add, subtract, multiple and divide different signals.
 
 ### Code
 ```python
-from signals.gen_signals import create_sine_wave 
+from signals.signals import create_sine_wave 
 from signals.plot_signal import plot_sig
 
-duration = [0,2] #D uration of signal
+duration = [0,2] #Duration of signal
 frequency = 4
 
 t,sine = create_sine_wave(duration, frequency)
@@ -49,7 +49,7 @@ plot_sig(t,sine) # Plots signal
 
  ### Code
  ```python
-from signals.gen_signals import create_pulse, create_unit_step
+from signals.signals import create_pulse, create_unit_step
 from signals.plot_signal import plot_sig
 
 duration = [-4,4]

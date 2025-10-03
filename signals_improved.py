@@ -29,8 +29,15 @@ class Signal:
         return Signal(self.t + displace, self.samples, self.sample_rate)
 
     def scale(self, factor: float):
-        return Signal(self.t * factor, self.samples, self.sample_rate)
-    
+        self.t = self.t * factor
+        start, end = self.t[0], self.t[-1]
+        t = int(self.sample_rate * np.abs(end - start))
+
+        self.t = np.linspace(start, end, t)
+        self.samples = np.interp(self.t, self.t / factor, self.samples)
+
+        return Signal(self.t, self.samples, self.sample_rate)
+
     def amplify(self, factor: float):
         return Signal(self.t, self.samples * factor, self.sample_rate)
 
@@ -43,6 +50,7 @@ class Signal:
         return Signal(self.t, convolved_samples, self.sample_rate)
 
     def plot(self):
+        print(f"time array shape: {self.t.shape}")
         plt.plot(self.t, self.samples)
         plt.xlabel('Time [s]')
         plt.ylabel('Amplitude')
@@ -109,11 +117,10 @@ if __name__ == "__main__":
     duration2 = [-4, 4]
 
     triangle_signal = gen.triangle(duration=duration2, amp=4, displace=0)
-    pulse_signal = gen.pulse(duration=duration1, amp=4)
-    pulse_signal = pulse_signal.scale(2)
+    pulse_signal = gen.pulse(duration=duration1, amp=4).scale(2)
 
-    convolved_signal = pulse_signal.convolution(triangle_signal)
+    #convolved_signal = pulse_signal.convolution(triangle_signal)
 
     triangle_signal.plot()
     pulse_signal.plot()
-    convolved_signal.plot()
+    #convolved_signal.plot()
