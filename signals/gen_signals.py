@@ -25,16 +25,19 @@ def create_sinc_wave(strt_duration, end_duration, sample_rate=1000, phase=0,amp=
     return t, sinc_wave
 
 
-def create_unit_step(strt_duration, end_duration, displace=0, amp=1):
+def create_unit_step(strt_duration, end_duration, sample_rate=1000, displace=0, amp=1):
 
-    t = time_spacing(strt_duration, end_duration, 1000)
+    t = time_spacing(strt_duration, end_duration, sample_rate)
     unit_step = np.where(t < 0-displace, 0, amp)
 
     return  t, unit_step
 
 
-def create_pulse(strt_duration, end_duration, displace=0, amp=1):
-    t, step_up = create_unit_step(strt_duration, end_duration, displace=0.5-displace, amp=1)
-    t, step_down = create_unit_step(strt_duration, end_duration, displace=-0.5-displace, amp=-1)
+def create_pulse(strt_duration, end_duration, sample_rate=1000, displace=0, amp=1):
+
+    t, step_up = create_unit_step(strt_duration, end_duration, sample_rate=sample_rate, displace=0.5-displace, amp=amp)
+    t, step_down = create_unit_step(strt_duration, end_duration, sample_rate=sample_rate, displace=-0.5-displace, amp=-amp)
+
     pulse = amp * (step_up+step_down)
+
     return t, pulse
