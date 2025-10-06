@@ -1,3 +1,4 @@
+from turtle import mode
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -9,12 +10,12 @@ class Signal:
 
     def check_comp(self, other):
         if not np.array_equal(self.t, other.t):
-            print(f"Self time array: {self.t.shape}")
-            print(f"Other time array: {other.t.shape}")
+            print(f"Self time array: {self.t.shape}. Length: {len(self.t)}")
+            print(f"Other time array: {other.t.shape}. Length: {len(other.t)}")
             raise ValueError("Signals must have the same time array")
-        if self.sample_rate != other.sample_rate:
-            print(f"Self sample rate: {self.sample_rate}")
-            print(f"Other sample rate: {other.sample_rate}")
+        if not np.array_equal(self.samples, other.samples):
+            print(f"Self sample rate: {self.samples}")
+            print(f"Other sample rate: {other.samples}")
             raise ValueError("Signals must have the same sample rate")
 
     def add(self, other):
@@ -29,14 +30,15 @@ class Signal:
         return Signal(self.t + displace, self.samples, self.sample_rate)
 
     def scale(self, factor: float):
-        self.t = self.t * factor
-        start, end = self.t[0], self.t[-1]
-        t = int(self.sample_rate * np.abs(end - start))
+        t_old = self.t
+        samples_old = self.samples
 
-        self.t = np.linspace(start, end, t)
-        self.samples = np.interp(self.t, self.t / factor, self.samples)
+        samples_new = max(2, int(round(len(t_old) * factor)))
+        t_new = np.linspace(t_old[0], t_old[-1], samples_new, endpoint=True)
+        samples_new = np.interp(t_new, t_old, samples_old)
 
-        return Signal(self.t, self.samples, self.sample_rate)
+        return Signal(t_new, samples_new, self.sample_rate * factor)
+
 
     def amplify(self, factor: float):
         return Signal(self.t, self.samples * factor, self.sample_rate)
@@ -119,8 +121,8 @@ if __name__ == "__main__":
     triangle_signal = gen.triangle(duration=duration2, amp=4, displace=0)
     pulse_signal = gen.pulse(duration=duration1, amp=4).scale(2)
 
-    #convolved_signal = pulse_signal.convolution(triangle_signal)
+    convolved_signal = pulse_signal.convolution(triangle_signal)
 
     triangle_signal.plot()
     pulse_signal.plot()
-    #convolved_signal.plot()
+    convolved_signal.plot()
