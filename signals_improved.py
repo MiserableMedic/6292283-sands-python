@@ -8,15 +8,37 @@ class Signal:
         self.samples = samples
         self.sample_rate = sample_rate
 
+    def _time_scale(self, start, end, sample_rate):
+        if end < start:
+            start, end = end, start
+        dt = 1.0 / sample_rate
+
+        n_intervals = int(round((end - start) * sample_rate))
+
+        n_samples = n_intervals + 1 # Include endpoint
+
+        print(f"Creating time scale from {start} to {end} with {n_samples} samples.")
+
+        return start + dt * np.arange(n_samples)
+
     def check_comp(self, other):
-        if not np.array_equal(self.t, other.t):
+        rtol, atol = 1e-10, 1e-12
+
+        if self.t.shape != other.t.shape:
             print(f"Self time array: {self.t.shape}. Length: {len(self.t)}")
             print(f"Other time array: {other.t.shape}. Length: {len(other.t)}")
+            print(f"Self time array values: {self.t}")
+            print(f"Other time array values: {other.t}")
             raise ValueError("Signals must have the same time array")
-        if not np.array_equal(self.samples, other.samples):
-            print(f"Self sample rate: {self.samples}")
-            print(f"Other sample rate: {other.samples}")
+        
+        if self.sample_rate != other.sample_rate:
+            print(f"Self sample rate: {self.sample_rate}")
+            print(f"Other sample rate: {other.sample_rate}")
             raise ValueError("Signals must have the same sample rate")
+        
+        if not np.allclose(self.t, other.t, rtol=rtol, atol=atol):
+            max_dt = float(np.max(np.abs(self.t - other.t)))
+            raise ValueError(f"Signals must share the same time grid; max |Δt|={max_dt:.3e}. Resample one onto the other's grid.")
 
     def add(self, other):
         self.check_comp(other)
@@ -26,21 +48,19 @@ class Signal:
         self.check_comp(other)
         return Signal(self.t, self.samples * other.samples, self.sample_rate)
 
-    def shift(self, displace: float):
+    def shift(self, displace):
         return Signal(self.t + displace, self.samples, self.sample_rate)
 
-    def scale(self, factor: float):
-        t_old = self.t
-        samples_old = self.samples
+    def scale(self, factor):
+        t_old, x_old = self.t, self.samples
 
-        samples_new = max(2, int(round(len(t_old) * factor)))
-        t_new = np.linspace(t_old[0], t_old[-1], samples_new, endpoint=True)
-        samples_new = np.interp(t_new, t_old, samples_old)
+        start_new, end_new = t_old[0] * factor, t_old[-1] * factor
+        t_new = self._time_scale(start_new, end_new, self.sample_rate)
+        x_new = np.interp(t_new / factor, t_old, x_old)
 
-        return Signal(t_new, samples_new, self.sample_rate * factor)
-
-
-    def amplify(self, factor: float):
+        return Signal(t_new, x_new, self.sample_rate)
+        
+    def amplify(self, factor):
         return Signal(self.t, self.samples * factor, self.sample_rate)
 
     def reverse(self):
@@ -64,13 +84,13 @@ class GenSignal:
     def __init__(self, sample_rate: float = 1000.0):
         self.sample_rate = float(sample_rate)
 
-    def duration_split(self, duration: float):
+    def _duration_split(self, duration: float):
         return duration[0], duration[1]
     
     def _time(self, duration: float):
 
-        start, end = self.duration_split(duration)
-        t = int(self.sample_rate * np.abs(end - start))
+        start, end = self._duration_split(duration)
+        t = int(self.sample_rate * np.abs(end - start)) + 1
 
         return np.linspace(start, end, t)
 
@@ -113,16 +133,18 @@ class GenSignal:
     
 
 if __name__ == "__main__":
-    gen = GenSignal(sample_rate=1000)
+    gen = GenSignal(sample_rate=1051)
 
-    duration1 = [-2, 2]
-    duration2 = [-4, 4]
+    duration1 = [-2, 1.5]
+    duration2 = [-4, 3]
 
     triangle_signal = gen.triangle(duration=duration2, amp=4, displace=0)
     pulse_signal = gen.pulse(duration=duration1, amp=4).scale(2)
 
-    convolved_signal = pulse_signal.convolution(triangle_signal)
+    convolved_signal1 = pulse_signal.convolution(triangle_signal)
+    convolved_signal2 = triangle_signal.convolution(pulse_signal)
 
     triangle_signal.plot()
     pulse_signal.plot()
-    convolved_signal.plot()
+    convolved_signal1.plot()
+    convolved_signal2.plot()
