@@ -1,4 +1,3 @@
-from turtle import mode
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -68,7 +67,7 @@ class Signal:
 
     def convolution(self, other):
         self.check_comp(other)
-        convolved_samples = np.convolve(self.samples, other.samples, mode='same')
+        convolved_samples = np.convolve(self.samples, other.samples, mode='same') * (1.0 / self.sample_rate)
         return Signal(self.t, convolved_samples, self.sample_rate)
 
     def plot(self):
@@ -130,16 +129,24 @@ class GenSignal:
         samples = np.where(samples < 0, 0, samples)
 
         return Signal(t, samples, self.sample_rate)
-    
+
+    def ramp(self, duration, amp=1.0, displace=0.0):
+        t = self._time(duration)
+        samples = amp * (t - displace)
+
+        samples = np.where(samples < 0, 0, samples)
+
+        return Signal(t, samples, self.sample_rate)
+
 
 if __name__ == "__main__":
     gen = GenSignal(sample_rate=1051)
 
-    duration1 = [-2, 1.5]
-    duration2 = [-4, 3]
+    duration1 = [-1, 2]
+    duration2 = [-1, 2]
 
-    triangle_signal = gen.triangle(duration=duration2, amp=4, displace=0)
-    pulse_signal = gen.pulse(duration=duration1, amp=4).scale(2)
+    triangle_signal = gen.ramp(duration=duration2)
+    pulse_signal = gen.pulse(duration=duration1, amp=2.0)
 
     convolved_signal1 = pulse_signal.convolution(triangle_signal)
     convolved_signal2 = triangle_signal.convolution(pulse_signal)
