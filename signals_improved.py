@@ -3,11 +3,30 @@ import matplotlib.pyplot as plt
 
 class Signal:
     def __init__(self, t: np.ndarray, samples: np.ndarray, sample_rate: float):
+        '''Initialize a Signal object.
+
+        Args:
+            t (np.ndarray): time array
+            samples (np.ndarray): sample array
+            sample_rate (float): sample rate in Hz
+        '''
         self.t = t
         self.samples = samples
         self.sample_rate = sample_rate
 
     def _time_scale(self, start, end, sample_rate):
+        '''
+        Create time scale from start to end with given sample rate 
+        Endpoint is included
+
+        Args:
+            start (float): start time
+            end (float): end time
+            sample_rate (float): sample rate in Hz
+
+        Returns:
+            np.ndarray: time array
+        '''
         if end < start:
             start, end = end, start
         dt = 1.0 / sample_rate
@@ -21,6 +40,16 @@ class Signal:
         return start + dt * np.arange(n_samples)
 
     def check_comp(self, other):
+        '''
+        Checks compatibility of two signals
+        They must have the same time array and sample rate
+
+        Args:
+            other (Signal): Signal object to compare with
+
+        Raises:
+            ValueError: if the signals are not compatible
+        '''
         rtol, atol = 1e-10, 1e-12
 
         if self.t.shape != other.t.shape:
@@ -40,17 +69,58 @@ class Signal:
             raise ValueError(f"Signals must share the same time grid; max |Δt|={max_dt}. Resample one onto the other's grid.")
 
     def add(self, other):
+        '''
+        Adds two signals
+        They must have the same time array and sample rate
+
+        Args:
+            other (Signal): Signal object to add
+            
+        Returns:
+            Signal: new Signal object with added samples
+        '''
+
         self.check_comp(other)
         return Signal(self.t, self.samples + other.samples, self.sample_rate)
 
     def multiply(self, other):
+        '''
+        Multiplies two signals
+        They must have the same time array and sample rate
+
+        Args:
+            other (Signal): Signal object to multiply   
+
+        Returns:
+            Signal: new Signal object with multiplied samples
+        '''
+
         self.check_comp(other)
         return Signal(self.t, self.samples * other.samples, self.sample_rate)
 
     def shift(self, displace):
+        '''
+        Shifts the signal in time
+
+        Args:
+            displace (float): time displacement in seconds
+
+        Returns:
+            Signal: new Signal object with shifted time array
+        '''
         return Signal(self.t + displace, self.samples, self.sample_rate)
 
     def scale(self, factor):
+        '''
+        Scales the signal in time
+        
+        Args:
+            factor (float): time scaling factor
+
+        Returns:
+            Signal: new Signal object with scaled time array
+        '''
+
         t_old, x_old = self.t, self.samples
 
         start_new, end_new = t_old[0] * factor, t_old[-1] * factor
@@ -60,17 +130,56 @@ class Signal:
         return Signal(t_new, x_new, self.sample_rate)
         
     def amplify(self, factor):
+        '''
+        Amplifies the signal in amplitude
+
+        Args:
+            factor (float): amplitude scaling factor
+
+        Returns:
+            Signal: new Signal object with amplified samples
+        '''
         return Signal(self.t, self.samples * factor, self.sample_rate)
 
     def reverse(self):
+        '''
+        Reverses the signal in time
+
+        Returns:
+            Signal: new Signal object with reversed time array
+        '''
+
         return Signal(-self.t, self.samples, self.sample_rate)
 
     def convolution(self, other):
+        '''
+        Convolves two signals
+        They must have the same time array and sample rate
+
+        Args:
+            other (Signal): Signal object to convolve with
+
+        Returns:
+            Signal: new Signal object with convolved samples
+        '''
+
         self.check_comp(other)
         convolved_samples = np.convolve(self.samples, other.samples, mode='same') * (1 / self.sample_rate)
         return Signal(self.t, convolved_samples, self.sample_rate)
 
-    def extend(self, duration, fill_value=0):
+    def pad_signal(self, duration, fill_value=0):
+        '''
+        Pads the signal to a new duration with a fill value
+        New duration must be larger than current duration
+
+        Args:
+            duration (list or tuple): new duration [start, end]
+            fill_value (float): value to fill the padded areas
+
+        Returns:
+            Signal: new Signal object with padded samples
+        '''
+
         start_req, end_req = duration[0], duration[1]
         if end_req <= start_req:
             raise ValueError("end must be greater than start")
@@ -89,23 +198,55 @@ class Signal:
 
         return Signal(t_new, samples_new, sample_rate)
 
-    def plot(self):
-        print(f"time array shape: {self.t.shape}")
+    def add_to_plot(self, fig_num, show=False):
+        '''
+        Adds the signal to a matplotlib plot
+        Max number of subplots is 6
+
+        Args:
+            fig_num (int): figure number
+            show (bool): whether to show the plot immediately
+
+        Returns:
+            None
+        '''
+        plt.subplot(6, 1, fig_num)
         plt.plot(self.t, self.samples)
         plt.xlabel('Time [s]')
         plt.ylabel('Amplitude')
         plt.grid()
-        plt.show()
+        if show:
+            plt.show()
 
 
 class GenSignal:
     def __init__(self, sample_rate: float = 1000.0):
+        '''
+        Initialize a GenSignal object.
+        
+        Args:
+            sample_rate (float): sample rate in Hz
+        '''
+
         self.sample_rate = float(sample_rate)
 
     def _duration_split(self, duration: float):
+        '''
+        Splits duration into start and end time
+
+        Args:
+            duration (list or tuple): duration [start, end]
+        '''
+
         return duration[0], duration[1]
     
     def _time(self, duration: float):
+        '''
+        Generates time array for a given duration
+
+        Args:
+            duration (list or tuple): duration [start, end]
+        '''
 
         start, end = self._duration_split(duration)
         t = int(self.sample_rate * np.abs(end - start)) + 1
@@ -113,27 +254,87 @@ class GenSignal:
         return np.linspace(start, end, t)
 
     def sine(self, freq, duration, amp=1.0, phase=0.0):
+        '''
+        Generates a sine wave signal
+        
+        Args:
+            freq (float): frequency in Hz
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            phase (float): phase in radians
+        Returns:
+            Signal: Signal object with sine wave samples
+        '''
+
         t = self._time(duration)
         samples = amp * np.sin(2*np.pi*freq*t + phase)
 
         return Signal(t, samples, self.sample_rate)
     
     def cosine(self, freq, duration, amp=1.0, phase=0.0):
+        '''
+        Generates a cosine wave signal
+
+        Args:
+            freq (float): frequency in Hz
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            phase (float): phase in radians
+
+        Returns:
+            Signal: Signal object with cosine wave samples
+        '''
+
         return self.sine(freq, duration, amp=amp, phase=(np.pi/2 + phase))
     
     def sinc(self, duration, amp=1.0, phase=0.0):
+        '''
+        Generates a sinc wave signal
+        
+        Args:
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            phase (float): phase in radians
+
+        Returns:
+            Signal: Signal object with sinc wave samples
+        '''
         t = self._time(duration)
         samples = amp * np.sinc(t + phase)
 
         return Signal(t, samples, self.sample_rate)
     
     def unit_step(self, duration, amp=1.0, displace=0.0):
+        '''
+        Generates a unit step signal
+
+        Args:
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            displace (float): time displacement
+
+        Returns:
+            Signal: Signal object with unit step samples
+        '''
+        5
         t = self._time(duration)
         samples = np.where(t < 0 - displace, 0, amp)
 
         return Signal(t, samples, self.sample_rate)
     
     def pulse(self, duration, amp=1.0, displace=0.0):
+        '''
+        Generates a unit step signal
+
+        Args:
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            displace (float): time displacement
+        
+        Returns:
+            Signal: Signal object with pulse samples
+        '''
+
         step_up = self.unit_step(duration, amp=1.0, displace=(0.5 - displace))
         step_down = self.unit_step(duration, amp=-1.0, displace=(-0.5 - displace))
 
@@ -142,6 +343,18 @@ class GenSignal:
         return Signal(step_up.t, samples, self.sample_rate)
     
     def triangle(self, duration, amp=1.0, displace=0.0):
+        '''
+        Generates a triangle wave signal
+
+        Args:
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            displace (float): time displacement
+        
+        Returns:
+            Signal: Signal object with triangle wave samples
+        '''
+
         t = self._time(duration)
         samples = amp * (1 - np.abs(t - displace))
 
@@ -150,6 +363,18 @@ class GenSignal:
         return Signal(t, samples, self.sample_rate)
 
     def ramp(self, duration, amp=1.0, displace=0.0):
+        '''
+        Generates a triangle wave signal
+
+        Args:
+            duration (list or tuple): duration [start, end]
+            amp (float): amplitude
+            displace (float): time displacement
+        
+        Returns:
+            Signal: Signal object with ramp samples
+        '''
+
         t = self._time(duration)
         samples = amp * (t - displace)
 
@@ -164,12 +389,13 @@ if __name__ == "__main__":
     duration1 = [-3, 4]
     duration2 = [-3, 1]
 
-    triangle_signal = gen.ramp(duration=duration2).extend(duration=duration1, fill_value=0.0)
+    triangle_signal = gen.ramp(duration=duration2).pad_signal(duration=duration1, fill_value=0.0)
     pulse_signal = gen.pulse(duration=duration1,amp=2.0)
     
-
     convolved_signal1 = pulse_signal.convolution(triangle_signal)
 
-    triangle_signal.plot()
-    pulse_signal.plot()
-    convolved_signal1.plot()
+    triangle_signal.add_to_plot(1)
+    pulse_signal.add_to_plot(3)
+    convolved_signal1.add_to_plot(5,show=True)
+
+    
