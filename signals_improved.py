@@ -139,6 +139,7 @@ class Signal:
         Returns:
             Signal: new Signal object with amplified samples
         '''
+
         return Signal(self.t, self.samples * factor, self.sample_rate)
 
     def reverse(self):
@@ -201,7 +202,7 @@ class Signal:
     def add_to_plot(self, fig_num, show=False):
         '''
         Adds the signal to a matplotlib plot
-        Max number of subplots is 6
+        Max number of subplots is 5
 
         Args:
             fig_num (int): figure number
@@ -210,12 +211,14 @@ class Signal:
         Returns:
             None
         '''
-        plt.subplot(6, 1, fig_num)
+        plt.subplot(3, 1, fig_num)
         plt.plot(self.t, self.samples)
-        plt.xlabel('Time [s]')
-        plt.ylabel('Amplitude')
         plt.grid()
+
         if show:
+            fig = plt.gcf()
+            fig.supxlabel("Time [s]")
+            fig.supylabel("Amplitude")
             plt.show()
 
 
@@ -316,7 +319,6 @@ class GenSignal:
         Returns:
             Signal: Signal object with unit step samples
         '''
-        5
         t = self._time(duration)
         samples = np.where(t < 0 - displace, 0, amp)
 
@@ -389,13 +391,14 @@ if __name__ == "__main__":
     duration1 = [-3, 4]
     duration2 = [-3, 1]
 
-    triangle_signal = gen.ramp(duration=duration2).pad_signal(duration=duration1, fill_value=0.0)
+    triangle_signal = gen.ramp(duration=duration2)
+    padded_triangle = triangle_signal.pad_signal(duration=duration1, fill_value=0.0)
     pulse_signal = gen.pulse(duration=duration1,amp=2.0)
     
-    convolved_signal1 = pulse_signal.convolution(triangle_signal)
+    convolved_signal1 = pulse_signal.convolution(padded_triangle)
 
     triangle_signal.add_to_plot(1)
-    pulse_signal.add_to_plot(3)
-    convolved_signal1.add_to_plot(5,show=True)
+    pulse_signal.add_to_plot(2)
+    convolved_signal1.add_to_plot(3,show=True)
 
     
