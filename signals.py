@@ -264,7 +264,20 @@ class GenSignal:
 
         return np.linspace(start, end, t)
 
-    def sine(self, freq, duration, amp=1.0, phase=0.0):
+    def _freq_check(self, freq):
+        '''
+        Checks for zero frequency and raises an error if so
+
+        Args:
+            freq (float): frequency in Hz
+            duration (list or tuple): duration [start, end]
+        Raises:
+            ValueError: if freq is zero
+        '''
+        return True if freq <= 0 else False
+        
+
+    def sine(self, duration, freq=1.0, amp=1.0, phase=0.0):
         '''
         Generates a sine wave signal
         
@@ -276,14 +289,15 @@ class GenSignal:
         Returns:
             Signal: Signal object with sine wave samples
         '''
-        if freq <= 0:
+        if self._freq_check(freq):
             return Signal(np.zeros(len(self._time(duration))),  np.zeros(len(self._time(duration))), self.sample_rate)
+        
         t = self._time(duration)
         samples = amp * np.sin(2*np.pi*freq*t + phase)
 
         return Signal(t, samples, self.sample_rate)
     
-    def cosine(self, freq, duration, amp=1.0, phase=0.0):
+    def cosine(self, duration, freq=1.0, amp=1.0, phase=0.0):
         '''
         Generates a cosine wave signal
 
@@ -296,10 +310,9 @@ class GenSignal:
         Returns:
             Signal: Signal object with cosine wave samples
         '''
-
-        return self.sine(freq, duration, amp=amp, phase=(np.pi/2 + phase))
+        return self.sine(duration=duration,freq=freq, amp=amp, phase=(np.pi/2 + phase))
     
-    def sinc(self, duration, amp=1.0, phase=0.0):
+    def sinc(self, duration, freq=1.0, amp=1.0, phase=0.0):
         '''
         Generates a sinc wave signal
         
@@ -311,8 +324,11 @@ class GenSignal:
         Returns:
             Signal: Signal object with sinc wave samples
         '''
+        if self._freq_check(freq):
+            return Signal(np.zeros(len(self._time(duration))),  np.zeros(len(self._time(duration))), self.sample_rate)
+        
         t = self._time(duration)
-        samples = amp * np.sinc(t + phase)
+        samples = amp * np.sinc(t*freq + phase)
 
         return Signal(t, samples, self.sample_rate)
     
@@ -395,6 +411,7 @@ class GenSignal:
 
 if __name__ == "__main__":
     gen = GenSignal(sample_rate=1000)
-    sig = gen.sine(freq=5.0, duration=[3,-2], amp=1.0, phase=0.0)
-    sig.add_to_plot(fig_num=1, show=True)
-    
+    sig1 = gen.sinc(freq=1, duration=[4,-4], amp=1.0, phase=0.0)
+    sig2 = gen.sinc(freq=2, duration=[-4,4], amp=0.5, phase=0.0)
+    sig1.add_to_plot(fig_num=1, show=False)
+    sig2.add_to_plot(fig_num=2, show=True)
