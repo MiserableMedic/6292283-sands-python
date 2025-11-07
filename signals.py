@@ -55,15 +55,9 @@ class Signal:
         rtol, atol = 1e-10, 1e-12
 
         if self.t.shape != other.t.shape:
-            print(f"Self time array: {self.t.shape}. Length: {len(self.t)}")
-            print(f"Other time array: {other.t.shape}. Length: {len(other.t)}")
-            print(f"Self time array values: {self.t}")
-            print(f"Other time array values: {other.t}")
             raise ValueError("Signals must have the same time array")
         
         if self.sample_rate != other.sample_rate:
-            print(f"Self sample rate: {self.sample_rate}")
-            print(f"Other sample rate: {other.sample_rate}")
             raise ValueError("Signals must have the same sample rate")
         
         if not np.allclose(self.t, other.t, rtol=rtol, atol=atol):
@@ -170,7 +164,6 @@ class Signal:
         convolved_samples = np.convolve(self.samples, other.samples, mode='same') * (1 / self.sample_rate)
         return Signal(self.t, convolved_samples, self.sample_rate)
     
-
     def pad_signal(self, duration, fill_value=0):
         '''
         Pads the signal to a new duration with a fill value
@@ -366,8 +359,8 @@ class GenSignal:
             Signal: Signal object with pulse samples
         '''
 
-        step_up = self.unit_step(duration, amp=1.0, displace=(0.5 - displace))
-        step_down = self.unit_step(duration, amp=-1.0, displace=(-0.5 - displace))
+        step_up = self.unit_step(duration, amp=1.0, displace=(0.5 + displace))
+        step_down = self.unit_step(duration, amp=-1.0, displace=(-0.5 + displace))
 
         samples = amp * (step_up.samples + step_down.samples)
 
@@ -415,5 +408,13 @@ class GenSignal:
 
 if __name__ == "__main__":
     gen = GenSignal(sample_rate=1000)
-    sig1 = gen.triangle(duration=[-2,2], amp=7, displace=0.0)
-    sig1.add_to_plot(fig_num=1, show=True)
+    
+    sig1 = gen.pulse(duration=[-2,3], amp=3, displace=0.5)
+    sig2 = gen.unit_step(duration=[-2,3], amp=1, displace=1.0)
+    sigs_added = sig1.add(sig2)
+
+    sig1.add_to_plot(fig_num=1, show=False)
+    sig2.add_to_plot(fig_num=2, show=False)
+    sigs_added.add_to_plot(fig_num=3, show=True)
+
+    

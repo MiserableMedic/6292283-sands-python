@@ -179,4 +179,25 @@ def test_triangle(fs, tol, dur, amp, displace):
     assert np.max(np.abs(x)) <= amp + tol
     assert np.min(np.abs(x)) >= 0 - tol
 
- 
+#----------------------------------------------------------------------
+# Tests for GenSignal.ramp
+#----------------------------------------------------------------------]
+@pytest.mark.parametrize("dur,amp,displace", [
+    (1, 1.0, 0.0),
+    (-1, 2.3, 100.7),
+    ([0, 5], 0.5, -1.1),
+    ([0, -5], 0.5, -0.5)
+])
+def test_ramp(fs, tol, dur, amp, displace):
+    gen = GenSignal(sample_rate=fs)
+    sig = gen.ramp(duration=dur, amp=amp, displace=displace)
+    t, x = sig.t, sig.samples
+
+    assert_timegrid(t, fs, dur, tol)
+
+    start, end = parse_duration(dur)
+    expected_start = amp * (start - displace) if start >= displace else 0.0
+    expected_end = amp * (end - displace) if end >= displace else 0.0
+
+    assert np.isclose(x[0], expected_start, atol=tol)
+    assert np.isclose(x[-1], expected_end, atol=tol)

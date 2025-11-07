@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Signal generator and editor"
+version = "0.1.0"
+description = "Repo for generating, editing, combining and plotting signals"
+readme = "README.md"
+authors = [{ name = "Savva Zyryanov", email = "szyryanov@tudelft.nl",}]
+
+dependencies = [
+  "numpy",
+  "matplotlib",
+]
