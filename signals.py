@@ -245,12 +245,16 @@ class GenSignal:
         '''
        
         if isinstance(duration, (int, float)):
-            return 0.0, float(duration)
+            if duration == 0: 
+                raise ValueError("Duration cannot be zero")
+            return 0.0, float(duration) 
         elif isinstance(duration, (list, tuple)) and len(duration) == 2:
+            if duration[0] == duration[1]:
+                raise ValueError("Duration cannot be zero") 
             return float(duration[0]), float(duration[1])
         else:
             raise ValueError("Invalid duration format")
-    
+
     def _time(self, duration):
         '''
         Generates time array for a given duration
@@ -411,7 +415,5 @@ class GenSignal:
 
 if __name__ == "__main__":
     gen = GenSignal(sample_rate=1000)
-    sig1 = gen.sinc(freq=1, duration=[4,-4], amp=1.0, phase=0.0)
-    sig2 = gen.sinc(freq=2, duration=[-4,4], amp=0.5, phase=0.0)
-    sig1.add_to_plot(fig_num=1, show=False)
-    sig2.add_to_plot(fig_num=2, show=True)
+    sig1 = gen.triangle(duration=[-2,2], amp=7, displace=0.0)
+    sig1.add_to_plot(fig_num=1, show=True)

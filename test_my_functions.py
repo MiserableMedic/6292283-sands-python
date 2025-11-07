@@ -17,7 +17,6 @@ def tol():
 #----------------------------------------------------------------------
 # Helper functions
 #----------------------------------------------------------------------
-
 def parse_duration(dur):
     if isinstance(dur, (int, float)):
         return 0.0, float(dur)
@@ -40,7 +39,6 @@ def assert_timegrid(t, fs, dur, tol):
 #----------------------------------------------------------------------
 # Tests for GenSignal.sine & GenSignal.cosine
 #----------------------------------------------------------------------
-
 @pytest.mark.parametrize("freq,dur,amp,phase", [
     (5.0,  1, 1.0, 0.0),
     (37.5, -1, 2.3, 100.7),
@@ -115,3 +113,70 @@ def test_sinc_zero_freq_returns_empty(fs):
     gen = GenSignal(sample_rate=fs)
     sig = gen.sinc(freq=0.0, duration=[0,1], amp=1.0, phase=0.0)
     assert abs(sig.samples).sum() == 0
+
+#----------------------------------------------------------------------
+# Tests for GenSignal.unit_step
+#----------------------------------------------------------------------
+@pytest.mark.parametrize("dur,amp,displace", [
+    (1, 1.0, 0.0),
+    (-1, 2.3, 100.7),
+    ([0, 5], 0.5, -1.1),
+    ([0, -5], 0.5, -0.5)
+])
+def test_unit_step(fs, tol, dur, amp, displace):
+    gen = GenSignal(sample_rate=fs)
+    sig = gen.unit_step(duration=dur, amp=amp, displace=displace)
+    t, x = sig.t, sig.samples
+
+    assert_timegrid(t, fs, dur, tol)
+    assert np.max(np.abs(x)) <= amp + tol
+    assert np.min(np.abs(x)) >= 0 - tol
+
+def test_unit_step_zero_duration_returns_error(fs):
+    gen = GenSignal(sample_rate=fs)
+    with pytest.raises(ValueError):
+        gen.unit_step(duration=0.0, amp=1.0, displace=0.0)
+
+#----------------------------------------------------------------------
+# Tests for GenSignal.pulse
+#----------------------------------------------------------------------
+@pytest.mark.parametrize("dur,amp,displace", [
+    (1, 1.0, 0.0),
+    (-1, 2.3, 100.7),
+    ([0, 5], 0.5, -1.1),
+    ([0, -5], 0.5, -0.5)
+])
+def test_pulse(fs, tol, dur, amp, displace):
+    gen = GenSignal(sample_rate=fs)
+    sig = gen.pulse(duration=dur, amp=amp, displace=displace)
+    t, x = sig.t, sig.samples
+
+    assert_timegrid(t, fs, dur, tol)
+    assert np.max(np.abs(x)) <= amp + tol
+    assert np.min(np.abs(x)) >= 0 - tol
+
+def test_pulse_zero_duration_returns_error(fs):
+    gen = GenSignal(sample_rate=fs)
+    with pytest.raises(ValueError):
+        gen.pulse(duration=0.0, amp=1.0, displace=0.0)
+
+#----------------------------------------------------------------------
+# Tests for GenSignal.triangle
+#----------------------------------------------------------------------
+@pytest.mark.parametrize("dur,amp,displace", [
+    (1, 1.0, 0.0),
+    (-1, 2.3, 100.7),
+    ([0, 5], 0.5, -1.1),
+    ([0, -5], 0.5, -0.5)
+])
+def test_triangle(fs, tol, dur, amp, displace):
+    gen = GenSignal(sample_rate=fs)
+    sig = gen.triangle(duration=dur, amp=amp, displace=displace)
+    t, x = sig.t, sig.samples
+
+    assert_timegrid(t, fs, dur, tol)
+
+    assert np.max(np.abs(x)) <= amp + tol
+    assert np.min(np.abs(x)) >= 0 - tol
+
+ 
