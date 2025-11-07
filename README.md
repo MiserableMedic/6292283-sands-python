@@ -56,8 +56,13 @@ u  = gen.unit_step(duration, amp=2.0, displace=0.5)
 p  = gen.pulse(duration, amp=1.5, displace=1.0)
 
 # 3) Combine and plot
-combo = s1 + 0.75*c1 + 0.5*u + p
-plot_sig(t, combo, title="Combined signal")
+sum_s1_c1 = s1.add(c1)
+conv_s1_p = s1.convolution(p)
+u_reversed = u.reverse()
+
+sum_s1_c1.add_to_plot(fig_num=1, show=False)
+conv_s1_p.add_to_plot(fig_num=2, show=False)
+u_reversed.add_to_plot(fig_num=3, show=True)
 ```
 
 **Important:** When combining signals, make sure they share the **same** `duration` and `sample_rate`.
