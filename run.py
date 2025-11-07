@@ -1,31 +1,24 @@
-from signals.signals import create_cosine_wave, create_sinc_wave, create_sine_wave, create_unit_step, create_pulse
-from signals.plot_signal import plot_sig
+from signals import GenSignal
 
-duration = [-2,2]
+if __name__ == "__main__":
+    gen = GenSignal(sample_rate=1000)
+    duration = [-2, 2]
 
-#t1,cosine = create_cosine_wave(5,2,1000,amp=2,phase=np.pi/2)
-t,sine = create_sine_wave(duration, 2)
-#t3, sinh = create_sinc_wave(-4,4, 1000)
-#t4, unit_step1 = create_unit_step(duration, amp=1)
-#t6, unit_step2 = create_unit_step(duration, amp=1)
+    sine = gen.sine(duration=duration)
+    cosine = gen.cosine(duration=duration)
+    sinc = gen.sinc(duration=duration)
 
-#t5, pulse = create_pulse(duration, amp=4)
+    sine.add_to_plot(fig_num=1, show=False)
+    cosine.add_to_plot(fig_num=2, show=False)
+    sinc.add_to_plot(fig_num=3, show=True)
 
-#print(unit_step)
-#print(sinh)
+    unit_step = gen.unit_step(duration=duration)
+    pulse = gen.pulse(duration=duration)
+    triangle = gen.triangle(duration=duration)
+    
+    unit_step.add_to_plot(fig_num=1, show=False)
+    pulse.add_to_plot(fig_num=2, show=False)
+    triangle.add_to_plot(fig_num=3, show=True)
 
-#plot_sig(t1,cosine)
-plot_sig(t,sine)
-#plot_sig(t3,sinh)
-#plot_sig(t4, unit_step)
 
-#plot_sig(t5,pulse)
-#plot_sig(t4,unit_step1)
-#plot_sig(t4, unit_step2)
 
-duration = [-4,4]
-
-#t, pulse = create_pulse(duration, amp=4, displace=-1.5)
-#t, step = create_unit_step(duration, displace=2)
-
-#
